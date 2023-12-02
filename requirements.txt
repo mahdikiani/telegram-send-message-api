@@ -1,0 +1,8 @@
+# debugpy
+python-dotenv
+
+redis
+
+telethon
+fastapi
+uvicorn[standard]

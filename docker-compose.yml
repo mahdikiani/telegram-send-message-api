@@ -1,0 +1,44 @@
+version: '3.8'
+name: elara-backend
+services:
+  redis:
+    image: redis:alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - tel
+
+  web:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - .:/app
+    env_file: .env
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    # command: python -m debugpy --listen 0.0.0.0:3000 -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      - redis
+    networks:
+      - traefik-net
+      - tel
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${PROJECT_NAME}.entrypoints=web"
+      - "traefik.http.routers.${PROJECT_NAME}.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.${PROJECT_NAME}.middlewares=https-redirect"
+      - "traefik.http.routers.${PROJECT_NAME}-secure.entrypoints=websecure"
+      - "traefik.http.routers.${PROJECT_NAME}-secure.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.${PROJECT_NAME}-secure.tls=true"
+      - "traefik.http.routers.${PROJECT_NAME}-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.services.${PROJECT_NAME}.loadbalancer.server.port=8000"
+      - "traefik.docker.network=traefik-net"
+  
+
+networks:
+  tel:
+  traefik-net:
+    external: true
