@@ -13,7 +13,7 @@ curl  -X POST \
   --header 'Content-Type: application/json' \
   --data-raw '{
   "phone": "989923123236",
-  "code": "97418"
+  "code": "73545"
 }'
 
 # send_message

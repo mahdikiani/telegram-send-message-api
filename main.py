@@ -57,13 +57,19 @@ class LoginDetail(BaseModel):
 
 @app.post("/get_code")
 async def get_code(login_detail: LoginDetail):
-    await client.connect()
+    global client
+    try:
+        await client.connect()
+    except ValueError as e:
+        client = TelegramClient("anon", api_id, api_hash)
+        await client.connect()
     await client.send_code_request(login_detail.phone)
     return {"status": "code sent"}
 
 
 @app.post("/login")
 async def login(login_detail: LoginDetail):
+    global client
     try:
         await client.connect()
     except ValueError as e:
@@ -106,7 +112,16 @@ async def login(login_detail: LoginDetail):
 
 @app.get("/logout")
 async def logout(request: Request):
+    global client
+    try:
+        await client.connect()
+
+    except ValueError as e:
+        client = TelegramClient("anon", api_id, api_hash)
+        await client.connect()
+
     await client.log_out()
+
     return {"status": "logged out"}
 
 
@@ -117,8 +132,13 @@ class Message(BaseModel):
 
 @app.post("/send_message")
 async def send_message(msg: Message):
-    await client.connect()
+    global client
+    try:
+        await client.connect()
+    except ValueError as e:
+        client = TelegramClient("anon", api_id, api_hash)
+        await client.connect()
+
     entity = await client.get_entity(msg.phone)
-    print(entity)
     await client.send_message(entity, msg.message)
     return {"status": "message sent"}
